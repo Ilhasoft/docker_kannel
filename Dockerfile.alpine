@@ -1,0 +1,116 @@
+#FROM alpine:3
+
+#RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing kannel
+# pull official base image
+FROM alpine:3 AS base
+
+ARG APP_UID=1000
+ARG APP_GID=500
+
+ARG BUILD_DEPS="\
+  ca-certificates bash subversion \
+  libxml2 pcre musl openssl \
+  libxml2-dev pcre-dev build-base libtool musl-dev bison \
+  hiredis-dev openssl-dev mariadb-dev automake"
+ARG RUNTIME_DEPS="\
+  libxml2 pcre musl openssl \
+  ca-certificates \
+  bash netcat curl \
+  supervisor"
+
+ARG VERSION="0.1"
+
+# set environment variables
+ENV VERSION=${VERSION} \
+  RUNTIME_DEPS=${RUNTIME_DEPS} \
+  BUILD_DEPS=${BUILD_DEPS} \
+  PATH="/install/bin:${PATH}"
+
+LABEL version=${VERSION} \
+  os="Alpine" \
+  os.version="3" \
+  name="Kannel ${VERSION}" \
+  description="Kannel image" \
+  maintainer="Weni Team"
+
+RUN addgroup --gid "${APP_GID}" app_group \
+  && adduser -S -h / -u "${APP_UID}" -s /bin/bash -g "${APP_GID}" app_user
+
+# set work directory
+WORKDIR /app
+
+FROM base AS build
+
+RUN if [ ! "x${BUILD_DEPS}" = "x" ] ; then apk add --no-cache ${BUILD_DEPS} ; fi
+
+# install dependencies
+RUN mkdir /install /build
+
+#RUN svn checkout --trust-server-cert --non-interactive -r 5200 https://svn.kannel.org/gateway/trunk \
+RUN svn checkout --trust-server-cert --non-interactive https://svn.kannel.org/gateway/tags/version_1_4_5 \
+  /build
+
+WORKDIR /build
+
+#RUN ln -sf /usr/include/poll.h /usr/include/sys/poll.h \
+#  && ln -s /usr/share/libtool/build-aux/ltmain.sh /build/ltmain.sh \
+#RUN ln -s /usr/include/unistd.h /usr/include/sys/unistd.h
+RUN ln -sf /usr/include/poll.h /usr/include/sys/poll.h \
+  && ln -s /usr/include/unistd.h /usr/include/sys/unistd.h \
+  && sed -i '/dispatch_to_wsp/d' /build/wap/wtp_resp.c \
+  && ./configure --prefix=/usr --enable-pcre \
+  --sysconfdir=/etc/kannel --localstatedir=/var \
+  --enable-docs=no --enable-start-stop-daemon=no \
+  --without-sdb --without-oracle --without-sqlite2  \
+  --with-mysql --with-mysql-dir=/usr/lib/mysql/ \
+  --enable-debug --enable-assertions --with-defaults=speed \
+  --enable-localtime --disable-wap \
+  && touch .depend \
+  && make depend \
+  && make \
+  && make DESTDIR=/install install \
+  && cd addons/sqlbox \
+#  && ./bootstrap \
+  && ./configure --prefix=/usr --sysconfdir=/etc/kannel --localstatedir=/var \
+  && make \
+  && make DESTDIR=/install install \
+  && cd ../opensmppbox \
+#  && ./bootstrap \
+  && ./configure --prefix=/usr --sysconfdir=/etc/kannel --localstatedir=/var \
+  && make \
+  && make DESTDIR=/install install
+
+FROM base
+
+COPY --from=build --chown=app_user:app_group /install/usr /usr
+COPY --from=build --chown=app_user:app_group /install/etc /etc
+
+RUN apk add --no-cache ${RUNTIME_DEPS} \
+  && chmod -R 755 /var/spool/kannel \
+  && mkdir /var/spool/kannel \
+  && chmod -R 755 /var/log/kannel \
+  && mkdir /var/log/kannel
+
+COPY --chown=app_user:app_group docker-entrypoint.sh /
+COPY --chown=app_user:app_group kannel.conf /etc/kannel/kannel.conf
+COPY --chown=app_user:app_group supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY --chown=app_user:app_group opensmppbox.conf /etc/kannel/opensmppbox.conf
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD ["start"]
+#CMD sleep 6d
+
+WORKDIR /
+
+HEALTHCHECK --interval=15s --timeout=20s --start-period=60s \
+  CMD /docker-entrypoint.sh healthcheck
+
+EXPOSE 13013 13000 2346 13015
+
+VOLUME ["/var/spool/kannel", "/etc/kannel", "/var/log/kannel"]
+
+#RUN ln -sf /usr/include/poll.h /usr/include/sys/poll.h \
+#  && ln -s /usr/include/unistd.h /usr/include/sys/unistd.h \
+#  && ln -s /usr/share/libtool/build-aux/ltmain.sh /kannel-svn-trunk/ltmain.sh
+

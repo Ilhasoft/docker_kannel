@@ -1,0 +1,59 @@
+group = core
+admin-port = 13000
+admin-password = ""
+admin-allow-ip = ""
+smsbox-port = 13001
+log-file = "/dev/stdout"
+box-allow-ip = "127.0.0.1"
+log-level = ${LOG_LEVEL}
+
+
+group = smsbox
+bearerbox-host = "localhost"
+sendsms-port = 13014
+log-file = "/dev/stdout"
+access-log = "/dev/stdout"
+log-level = ${LOG_LEVEL}
+mo-recode = true
+
+
+group = smsc
+smsc = smpp
+smsc-id = ${SMSC_ID}
+interface-version = 34
+max-pending-submits = 20
+host = ${SMSC_HOST}
+port = ${SMSC_PORT}
+smsc-username = "${SMSC_USER}"
+smsc-password = "${SMSC_PASSWORD}"
+system-type = ${SMSC_SYSTEM_TYPE}
+system-type = SMPP
+transceiver-mode = 1
+log-file = "/dev/stdout"
+log-level = ${LOG_LEVEL}
+msg-id-type = 0x00
+alt-charset = "UTF-8"
+
+######################################################################
+######################################################################
+
+group = sendsms-user
+username = "${RAPIDPRO_USERNAME}"
+password = "${RAPIDPRO_PASSWORD}"
+concatenation = true
+max-messages = 10
+user-allow-ip = "*.*.*.*"
+faked-sender = ${FAKED_SENDER}
+forced-smsc = ${SMSC_ID}
+default-smsc = ${SMSC_ID}
+
+group = sms-service
+keyword = default
+##allowed-receiver-prefix = +555
+max-messages = 0
+post-url = "${RAPIDPRO_POSTURL}"
+concatenation = true
+assume-plain-text = true
+accept-x-kannel-headers = true
+omit-empty = true
+
