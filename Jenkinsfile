@@ -34,7 +34,7 @@ pipeline {
 		)
 		string(
 			name: 'DOCKER_REGISTRY_CREDENTIALS',
-			defaultValue: 'dockerhub',
+			defaultValue: 'dockerhub_weni_admin',
 			description: 'Docker registry credentials'
 		)
 		string(
