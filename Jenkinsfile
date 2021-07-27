@@ -63,7 +63,7 @@ pipeline {
 				script {
 					def image=docker.build("${params.DOCKER_IMAGE_NAME}")
 					docker.withRegistry("${params.DOCKER_REGISTRY_URL}", "${params.DOCKER_REGISTRY_CREDENTIALS}") {
-						if( BRANCH_NAME.startsWith("release-") ){
+						if( !BRANCH_NAME.startsWith("release-") ){
 							image.push("${params.DOCKER_IMAGE_TAG}")
 						}else{
 							image.push(BRANCH_NAME.minus('release-'))
