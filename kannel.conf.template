@@ -27,7 +27,6 @@ port = ${SMSC_PORT}
 smsc-username = "${SMSC_USER}"
 smsc-password = "${SMSC_PASSWORD}"
 system-type = ${SMSC_SYSTEM_TYPE}
-system-type = SMPP
 transceiver-mode = 1
 log-file = "/dev/stdout"
 log-level = ${LOG_LEVEL}
