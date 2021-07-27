@@ -131,3 +131,6 @@ VOLUME ["/var/spool/kannel", "/etc/kannel", "/var/log/kannel"]
 
 CMD ["/usr/bin/supervisord"]
 
+HEALTHCHECK --interval=10m --timeout=1m --start-period=1m \
+  CMD /docker-entrypoint.sh healthcheck
+
