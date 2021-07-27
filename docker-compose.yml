@@ -1,7 +1,8 @@
+version: '3.3'
+
 services:
-  web:
-	image: weniai/kannel:latest
-    build: .
+  kannel_country_company:
+    image: weniai/kannel:latest
     ports:
       - "${COUNTRY_COMPANY_KANNEL_PORT}:13014" # smsbox
     environment:
