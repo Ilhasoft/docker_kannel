@@ -1,13 +1,13 @@
 version: '3.3'
 
 services:
-  kannel_country_company:
+  kannel-country-company:
     image: weniai/kannel:latest
     ports:
       - "${COUNTRY_COMPANY_KANNEL_PORT}:13014" # smsbox
     environment:
       FAKED_SENDER: ${COUNTRY_COMPANY_FAKED_SENDER}
-      LOG_LEVEL: ${COUNTRY_COMPANY_LOG_LEVEL}
+      LOG_LEVEL: ${COUNTRY_COMPANY_LOG_LEVEL-0}
       RAPIDPRO_PASSWORD: ${COUNTRY_COMPANY_RAPIDPRO_PASSWORD}
       RAPIDPRO_POST_URL: ${COUNTRY_COMPANY_RAPIDPRO_POST_URL}
       RAPIDPRO_USERNAME: ${COUNTRY_COMPANY_RAPIDPRO_USERNAME}
