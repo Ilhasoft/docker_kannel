@@ -48,7 +48,7 @@ default-smsc = ${SMSC_ID}
 
 group = sms-service
 keyword = default
-##allowed-receiver-prefix = +555
+allowed-receiver-prefix = ${FAKED_SENDER}
 max-messages = 0
 post-url = "${RAPIDPRO_POST_URL}"
 concatenation = true
