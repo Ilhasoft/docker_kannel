@@ -9,7 +9,7 @@ for f in "${FILES[@]}" ; do
 done
 
 if [[ "healthcheck" == "$1" ]]; then
-	if curl http://127.0.0.1:13000/status -sL | fgrep "${SMSC_ID}" | fgrep -qs '(online ' ; then
+	if ! curl http://127.0.0.1:13000/status -sL | fgrep "${SMSC_ID}" | fgrep -qs '(online ' ; then
 		echo "${SMSC_ID} not online"
 		exit 1
 	fi
