@@ -11,7 +11,8 @@ ARG BUILD_DEPS="\
   openssl libssl-dev locales libmysqlclient-dev libmysql++-dev supervisor libtool-bin"
 ARG RUNTIME_DEPS="\
   curl unzip libxml2 libmysqlclient18 gettext-base \
-  libpcre3 openssl supervisor bash netcat curl"
+  libpcre3 openssl supervisor bash netcat ca-certificates \
+"
 
 ARG VERSION="0.1"
 
@@ -131,6 +132,6 @@ VOLUME ["/var/spool/kannel", "/etc/kannel", "/var/log/kannel"]
 
 CMD ["/usr/bin/supervisord"]
 
-HEALTHCHECK --interval=1m --retries=10 --start-period=1m \
+HEALTHCHECK --interval=1m --retries=5 --start-period=15 \
   CMD /docker-entrypoint.sh healthcheck
 
