@@ -115,6 +115,7 @@ RUN apt-get update \
   && SUDO_FORCE_REMOVE=yes apt-get remove --purge -y sudo \
   && apt-get autoremove -y \
   && apt-get install -y --no-install-recommends ${RUNTIME_DEPS} \
+  && sed -i '/^mozilla\/DST_Root_CA_X3/s/^/!/' /etc/ca-certificates.conf && update-ca-certificates -f -v \
   && rm -rf /usr/share/man \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
