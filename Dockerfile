@@ -7,7 +7,7 @@ ARG BUILD_DEPS="\
   build-essential subversion ntp nano wget cvs subversion curl git-core unzip autoconf \
   automake1.11 libtool flex debhelper pkg-config libpam0g-dev intltool checkinstall docbook docbook-xsl \
   build-essential libpcre3 libpcre3-dev libc6-dev g++ gcc autotools-dev libncurses5-dev m4 tex-common \
-  texi2html texinfo libxml2-dev \
+  texi2html texinfo libxml2-dev ca-certificates \
   openssl libssl-dev locales libmysqlclient-dev libmysql++-dev supervisor libtool-bin"
 ARG RUNTIME_DEPS="\
   curl unzip libxml2 libmysqlclient18 gettext-base \
@@ -42,7 +42,7 @@ RUN if [ ! "x${BUILD_DEPS}" = "x" ] ; then apt-get update \
 RUN locale-gen en_US && \
     locale-gen en_US.UTF-8
 
-RUN wget -c "https://snapshot.debian.org/archive/debian/20130517T034320Z/pool/main/b/bison/bison_2.7.1.dfsg-1_amd64.deb" "https://snapshot.debian.org/archive/debian/20130517T034320Z/pool/main/b/bison/libbison-dev_2.7.1.dfsg-1_amd64.deb" \
+RUN wget --no-check-certificate -c "https://snapshot.debian.org/archive/debian/20130517T034320Z/pool/main/b/bison/bison_2.7.1.dfsg-1_amd64.deb" "https://snapshot.debian.org/archive/debian/20130517T034320Z/pool/main/b/bison/libbison-dev_2.7.1.dfsg-1_amd64.deb" \
   && dpkg -i *.deb
 
 #RUN cd /usr/local && \
