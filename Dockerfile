@@ -1,4 +1,4 @@
-FROM debian:buster-slim as base
+FROM debian:bullseye-slim as base
 
 ARG APP_UID=1000
 ARG APP_GID=500
@@ -6,8 +6,8 @@ ARG APP_GID=500
 ARG BUILD_DEPS="\
   build-essential subversion ntp nano wget cvs subversion curl git-core unzip autoconf \
   automake1.11 libtool flex debhelper pkg-config libpam0g-dev intltool docbook docbook-xsl \
-  build-essential libpcre3 libpcre3-dev libc6-dev g++ gcc autotools-dev libncurses5-dev m4 tex-common \
-  texi2html texinfo libxml2-dev ca-certificates byacc bison \
+  build-essential libpcre3 libpcre3-dev libc6-dev g++ gcc autotools-dev libncurses-dev \
+  texi2html texinfo libxml2-dev ca-certificates byacc bison m4 tex-common \
   openssl libssl-dev locales default-libmysqlclient-dev  libmysqlcppconn-dev supervisor libtool-bin"
 ARG RUNTIME_DEPS="\
   curl unzip libxml2 libmariadb3 gettext-base \
@@ -55,7 +55,8 @@ RUN locale-gen en_US && \
 COPY gateway-1.4.5.patch /
 
 RUN svn checkout --trust-server-cert --non-interactive https://svn.kannel.org/gateway/tags/version_1_4_5 /gateway-1.4.5 \
-  && cd /gateway-1.4.5 && cat /gateway-1.4.5.patch | patch -p1 \
+  && export CFLAGS="-fcommon" && cd /gateway-1.4.5 \
+  && cat /gateway-1.4.5.patch | patch -p1 \
   && ./configure --prefix=/usr --enable-pcre \
   --sysconfdir=/etc/kannel --localstatedir=/var \
   --enable-docs=no --enable-start-stop-daemon=no \
