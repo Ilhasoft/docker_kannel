@@ -1,16 +1,16 @@
-FROM debian:jessie-slim as base
+FROM debian:buster-slim as base
 
 ARG APP_UID=1000
 ARG APP_GID=500
 
 ARG BUILD_DEPS="\
   build-essential subversion ntp nano wget cvs subversion curl git-core unzip autoconf \
-  automake1.11 libtool flex debhelper pkg-config libpam0g-dev intltool checkinstall docbook docbook-xsl \
+  automake1.11 libtool flex debhelper pkg-config libpam0g-dev intltool docbook docbook-xsl \
   build-essential libpcre3 libpcre3-dev libc6-dev g++ gcc autotools-dev libncurses5-dev m4 tex-common \
-  texi2html texinfo libxml2-dev ca-certificates \
-  openssl libssl-dev locales libmysqlclient-dev libmysql++-dev supervisor libtool-bin"
+  texi2html texinfo libxml2-dev ca-certificates byacc bison \
+  openssl libssl-dev locales default-libmysqlclient-dev  libmysqlcppconn-dev supervisor libtool-bin"
 ARG RUNTIME_DEPS="\
-  curl unzip libxml2 libmysqlclient18 gettext-base \
+  curl unzip libxml2 libmariadb3 gettext-base \
   libpcre3 openssl supervisor bash netcat ca-certificates \
 "
 
@@ -23,8 +23,8 @@ ENV VERSION=${VERSION} \
   PATH="/install/bin:${PATH}"
 
 LABEL version=${VERSION} \
-  os="Debina" \
-  os.version="9" \
+  os="Debian" \
+  os.version="10" \
   name="Kannel ${VERSION}" \
   description="Kannel image" \
   maintainer="Weni Team"
@@ -42,47 +42,20 @@ RUN if [ ! "x${BUILD_DEPS}" = "x" ] ; then apt-get update \
 RUN locale-gen en_US && \
     locale-gen en_US.UTF-8
 
-RUN wget --no-check-certificate -c "https://snapshot.debian.org/archive/debian/20130517T034320Z/pool/main/b/bison/bison_2.7.1.dfsg-1_amd64.deb" "https://snapshot.debian.org/archive/debian/20130517T034320Z/pool/main/b/bison/libbison-dev_2.7.1.dfsg-1_amd64.deb" \
-  && dpkg -i *.deb
+#!/bin/bash
 
-#RUN cd /usr/local && \
-#	mkdir /usr/local/src/kannel && \
-#	cd /usr/local/src/kannel && \
-#	svn checkout --trust-server-cert --non-interactive -r 5173 https://svn.kannel.org/gateway/trunk && \
-#	mv trunk gateway && \
-#	cd /usr/local/src/kannel/gateway && \
-#	./configure -prefix=/usr/local/kannel -with-mysql -with-mysql-dir=/usr/lib/mysql/ -enable-debug -enable-assertions -with-defaults=speed \
-#	-enable-localtime -enable-start-stop-daemon -enable-pam && \
-#	touch .depend && \
-#	make depend && \
-#	make && \
-#	make bindir=/usr/local/kannel install && \
-#	cd /usr/local/src/kannel/gateway/addons/sqlbox && \
-#    ./bootstrap && \
-#    ./configure -prefix=/usr/local/kannel -with-kannel-dir=/usr/local/kannel && \
-#    make && make bindir=/usr/local/kannel/sqlbox install && \
-#    cd /usr/local/src/kannel/gateway/addons/opensmppbox && \
-#    ./configure -prefix=/usr/local/kannel -with-kannel-dir=/usr/local/kannel && \
-#    make && make bindir=/usr/local/kannel/smppbox install && \
-#	mkdir /etc/kannel && \
-#	mkdir /var/log/kannel && \
-#	mkdir /var/log/kannel/gateway && \
-#	mkdir /var/log/kannel/smsbox && \
-#	mkdir /var/log/kannel/wapbox && \
-#	mkdir /var/log/kannel/smsc && \
-#	mkdir /var/log/kannel/sqlbox && \
-#	mkdir /var/log/kannel/smppbox && \
-#	mkdir /var/spool/kannel && \
-#	chmod -R 755 /var/spool/kannel && \
-#	chmod -R 755 /var/log/kannel && \
-#	cp /usr/local/src/kannel/gateway/gw/smskannel.conf /etc/kannel/kannel.conf && \
-#	cp /usr/local/src/kannel/gateway/debian/kannel.default /etc/default/kannel && \
-#	cp /usr/local/src/kannel/gateway/addons/sqlbox/example/sqlbox.conf.example /etc/kannel/sqlbox.conf && \
-#	cp /usr/local/src/kannel/gateway/addons/opensmppbox/example/opensmppbox.conf.example /etc/kannel/opensmppbox.conf && \
-#	cp /usr/local/src/kannel/gateway/addons/opensmppbox/example/smpplogins.txt.example /etc/kannel/smpplogins.txt && \
-#	rm -rf /usr/local/src/kannel/gateway && \
-#	apt-get -y clean
-RUN svn checkout --trust-server-cert --non-interactive https://svn.kannel.org/gateway/tags/version_1_4_5 /build && cd /build \
+#  apt-get install ca-certificates -y
+#  sed -i -e 's|mozilla/DST_Root_CA_X3.crt|#mozilla/DST_Root_CA_X3.crt|g' /etc/ca-certificates.conf
+#  sed -i -e 's|mozilla/ISRG_Root_X1.crt|#mozilla/ISRG_Root_X1.crt|g' /etc/ca-certificates.conf
+#  wget https://raw.githubusercontent.com/xenetis/letsencrypt-expiration/main/certificates/isrgrootx1.crt -P /usr/local/share/ca-certificates/
+#  wget https://raw.githubusercontent.com/xenetis/letsencrypt-expiration/main/certificates/lets-encrypt-r3.crt -P /usr/local/share/ca-certificates/
+#  update-ca-certificates -f -v
+#
+
+COPY gateway-1.4.5.patch /
+
+RUN svn checkout --trust-server-cert --non-interactive https://svn.kannel.org/gateway/tags/version_1_4_5 /gateway-1.4.5 \
+  && cd /gateway-1.4.5 && cat /gateway-1.4.5.patch | patch -p1 \
   && ./configure --prefix=/usr --enable-pcre \
   --sysconfdir=/etc/kannel --localstatedir=/var \
   --enable-docs=no --enable-start-stop-daemon=no \
@@ -95,6 +68,7 @@ RUN svn checkout --trust-server-cert --non-interactive https://svn.kannel.org/ga
   && make \
   && make DESTDIR=/install install \
   && make install \
+  && cp test/fakesmsc /install/usr/bin/ \
   && cd addons/sqlbox \
   && ./bootstrap \
   && ./configure --prefix=/usr --sysconfdir=/etc/kannel --localstatedir=/var \
@@ -115,10 +89,9 @@ RUN apt-get update \
   && SUDO_FORCE_REMOVE=yes apt-get remove --purge -y sudo \
   && apt-get autoremove -y \
   && apt-get install -y --no-install-recommends ${RUNTIME_DEPS} \
-  && sed -i '/^mozilla\/DST_Root_CA_X3/s/^/!/' /etc/ca-certificates.conf && update-ca-certificates -f -v \
   && rm -rf /usr/share/man \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* /tmp/*
 
 COPY --chown=app_user:app_group docker-entrypoint.sh /
 COPY --chown=app_user:app_group kannel.conf.template /etc/kannel/
@@ -135,4 +108,6 @@ CMD ["/usr/bin/supervisord"]
 
 HEALTHCHECK --interval=1m --retries=5 --start-period=15s \
   CMD /docker-entrypoint.sh healthcheck
+
+#fakesmsc -H localhost  -r 13014 -m 0 foo
 

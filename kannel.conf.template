@@ -15,7 +15,11 @@ log-file = "/dev/stdout"
 access-log = "/dev/stdout"
 log-level = ${LOG_LEVEL}
 mo-recode = true
-
+reply-couldnotfetch = "Posting SMS message to POST_URL. (err=couldnotfetch)"
+reply-requestfailed = "Failed to post SMS message to POST_URL. (err=requestfailed)"
+reply-couldnotrepresent = "Your message could not be processed at this time.  Please try again later. (err=couldnotrepresent)"
+reply-emptymessage = "empty message will not be send"
+sendsms-chars = "0123456789 +-"
 
 group = smsc
 smsc = smpp
