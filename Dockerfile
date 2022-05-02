@@ -92,8 +92,9 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends ${RUNTIME_DEPS} \
   && rm -rf /usr/share/man \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* /tmp/*
-  && chown app_user:app_group -Rv /var/log/supervisor/
+  && rm -rf /var/lib/apt/lists/* /tmp/* \
+  && mkdir -p /var/log/supervisor/ /etc/kannel/ \
+  && chown app_user:app_group -Rv /var/log/supervisor/ /etc/kannel/
 
 COPY --chown=app_user:app_group docker-entrypoint.sh /
 COPY --chown=app_user:app_group kannel.conf.template /etc/kannel/
