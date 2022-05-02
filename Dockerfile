@@ -93,6 +93,7 @@ RUN apt-get update \
   && rm -rf /usr/share/man \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/*
+  && chown app_user:app_group -Rv /var/log/supervisor/
 
 COPY --chown=app_user:app_group docker-entrypoint.sh /
 COPY --chown=app_user:app_group kannel.conf.template /etc/kannel/
